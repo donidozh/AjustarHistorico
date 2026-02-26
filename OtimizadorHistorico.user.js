@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Otimizador de Histórico SIGEDUCA
 // @namespace    http://tampermonkey.net/
-// @version      1.7
+// @version      1.8
 // @description  Otimiza o tamanho do histórico Ensino Médio no Sigeduca.
 // @author       Elder Martins
 // @match        http://sigeduca.seduc.mt.gov.br/ged/hwgedteladocumento.aspx?0,36
@@ -64,15 +64,15 @@
                 areaHtml = AREAS.AP_ESTUDOS;
             }
 
-            // 2. Regras IF/TA (Trilhas)
+            // 2. Regras IF/TA (Trilhas) e Casos Específicos
             else if (["SOCIOLOGIA IF/TA", "HISTÓRIA IF/TA", "GEOGRAFIA IF/TA", "FILOSOFIA IF/TA"].includes(texto)) {
                 areaHtml = AREAS.T_HUM_CHSA;
             }
             else if (["BIOLOGIA IF/TA", "FÍSICA IF/TA", "QUÍMICA IF/TA"].includes(texto)) {
                 areaHtml = AREAS.T_NAT_CNT;
             }
-            else if (["L.ESTRANGEIRA IF/TA", "L.ESTRANG (INGLÊS) IF/TA", "LINGUA INGLESA IF/TA", "ARTE IF/TA"].includes(texto)) {
-                areaHtml = AREAS.T_LIN_LGG; // Adicionado ARTE IF/TA aqui
+            else if (["L.ESTRANGEIRA IF/TA", "L.ESTRANG (INGLÊS) IF/TA", "LINGUA INGLESA IF/TA", "ARTE IF/TA", "LÍNGUA PORTUGUESA"].includes(texto)) {
+                areaHtml = AREAS.T_LIN_LGG; // LÍNGUA PORTUGUESA com acento mapeada para LGG
             }
             else if (texto === "PROJETO DE VIDA IF/TA") {
                 areaHtml = AREAS.ITI;
