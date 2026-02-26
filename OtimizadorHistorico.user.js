@@ -5,6 +5,8 @@
 // @description  Otimiza o tamanho do histórico Ensino Médio no Sigeduca.
 // @author       Elder Martins
 // @match        http://sigeduca.seduc.mt.gov.br/ged/hwgedteladocumento.aspx?0,36
+// @downloadURL  https://raw.githubusercontent.com/donidozh/OtimizadorHistorico/main/OtimizadorHistorico.user.js
+// @updateURL    https://raw.githubusercontent.com/donidozh/OtimizadorHistorico/main/OtimizadorHistorico.user.js
 // @grant        none
 // ==/UserScript==
 
@@ -28,12 +30,12 @@
 
     // Estilo para ocultar o botão na impressão
     const style = document.createElement('style');
-    style.innerHTML = `@media print { .btn-otimizar-v12 { display: none !important; } }`;
+    style.innerHTML = `@media print { .btn-otimizar-elder { display: none !important; } }`;
     document.head.appendChild(style);
 
     function criarSpan(textoHtml) {
         const span = document.createElement('span');
-
+        // Estilo centralizado, 65% opacidade conforme versões anteriores
         span.style.cssText = `
             font-size: 10px;
             font-weight: bold;
@@ -62,15 +64,15 @@
                 areaHtml = AREAS.AP_ESTUDOS;
             }
 
-            // 2. Regras IF/TA
+            // 2. Regras IF/TA (Trilhas)
             else if (["SOCIOLOGIA IF/TA", "HISTÓRIA IF/TA", "GEOGRAFIA IF/TA", "FILOSOFIA IF/TA"].includes(texto)) {
                 areaHtml = AREAS.T_HUM_CHSA;
             }
             else if (["BIOLOGIA IF/TA", "FÍSICA IF/TA", "QUÍMICA IF/TA"].includes(texto)) {
                 areaHtml = AREAS.T_NAT_CNT;
             }
-            else if (["L.ESTRANGEIRA IF/TA", "L.ESTRANG (INGLÊS) IF/TA", "LINGUA INGLESA IF/TA"].includes(texto)) {
-                areaHtml = AREAS.T_LIN_LGG;
+            else if (["L.ESTRANGEIRA IF/TA", "L.ESTRANG (INGLÊS) IF/TA", "LINGUA INGLESA IF/TA", "ARTE IF/TA"].includes(texto)) {
+                areaHtml = AREAS.T_LIN_LGG; // Adicionado ARTE IF/TA aqui
             }
             else if (texto === "PROJETO DE VIDA IF/TA") {
                 areaHtml = AREAS.ITI;
@@ -84,12 +86,11 @@
             else if (texto.includes("ELETIVA")) areaHtml = AREAS.ELE;
             else if (texto === "PROJETO DE VIDA") areaHtml = AREAS.PV;
 
-            // AÇÃO: Alterar célula à esquerda
+            // AÇÃO: Alterar célula à esquerda (Coluna da Área)
             if (areaHtml !== "") {
                 const celulaArea = celula.previousElementSibling;
                 if (celulaArea) {
                     celulaArea.innerHTML = "";
-                    // Garante que a célula alinhe o conteúdo no meio verticalmente
                     celulaArea.style.verticalAlign = "middle";
                     celulaArea.style.textAlign = "center";
                     celulaArea.appendChild(criarSpan(areaHtml));
@@ -98,16 +99,16 @@
             }
         });
 
-        const btn = document.querySelector('.btn-otimizar-v12');
-        btn.innerText = `✓ ${contador} Áreas Centralizadas`;
+        const btn = document.querySelector('.btn-otimizar-elder');
+        btn.innerText = `✓ ${contador} Áreas Otimizadas`;
         btn.style.background = "#6c757d";
     }
 
     function criarBotao() {
-        if (document.querySelector('.btn-otimizar-v12')) return;
+        if (document.querySelector('.btn-otimizar-elder')) return;
         const btn = document.createElement('button');
-        btn.className = 'btn-otimizar-v12';
-        btn.innerText = 'Otimizar Histórico (V12)';
+        btn.className = 'btn-otimizar-elder';
+        btn.innerText = 'Otimizar Histórico';
         btn.style.cssText = "position: fixed; top: 15px; right: 15px; z-index: 99999; padding: 12px 20px; background: #007bff; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; box-shadow: 0 4px 12px rgba(0,0,0,0.3);";
         btn.onclick = processarDocumento;
         document.body.appendChild(btn);
