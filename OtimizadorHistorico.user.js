@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Otimizador de Histórico SIGEDUCA
 // @namespace    http://tampermonkey.net/
-// @version      1.8
+// @version      1.9
 // @description  Otimiza o tamanho do histórico Ensino Médio no Sigeduca.
 // @author       Elder Martins
 // @match        http://sigeduca.seduc.mt.gov.br/ged/hwgedteladocumento.aspx?0,36
@@ -35,7 +35,6 @@
 
     function criarSpan(textoHtml) {
         const span = document.createElement('span');
-        // Estilo centralizado, 65% opacidade conforme versões anteriores
         span.style.cssText = `
             font-size: 10px;
             font-weight: bold;
@@ -59,12 +58,12 @@
 
             let areaHtml = "";
 
-            // 1. PRIORIDADE: APROFUNDAMENTO –
-            if (texto.startsWith("APROFUNDAMENTO –") || texto.startsWith("APROFUNDAMENTO -")) {
+            // 1. PRIORIDADE: APROFUNDAMENTO – e LEITURA E PRODUÇÃO DE TEXTO
+            if (texto.startsWith("APROFUNDAMENTO –") || texto.startsWith("APROFUNDAMENTO -") || texto === "LEITURA E PRODUÇÃO DE TEXTO") {
                 areaHtml = AREAS.AP_ESTUDOS;
             }
 
-            // 2. Regras IF/TA (Trilhas) e Casos Específicos
+            // 2. Regras IF/TA (Trilhas) e Casos Específicos (LÍNGUA PORTUGUESA com acento)
             else if (["SOCIOLOGIA IF/TA", "HISTÓRIA IF/TA", "GEOGRAFIA IF/TA", "FILOSOFIA IF/TA"].includes(texto)) {
                 areaHtml = AREAS.T_HUM_CHSA;
             }
@@ -72,7 +71,7 @@
                 areaHtml = AREAS.T_NAT_CNT;
             }
             else if (["L.ESTRANGEIRA IF/TA", "L.ESTRANG (INGLÊS) IF/TA", "LINGUA INGLESA IF/TA", "ARTE IF/TA", "LÍNGUA PORTUGUESA"].includes(texto)) {
-                areaHtml = AREAS.T_LIN_LGG; // LÍNGUA PORTUGUESA com acento mapeada para LGG
+                areaHtml = AREAS.T_LIN_LGG;
             }
             else if (texto === "PROJETO DE VIDA IF/TA") {
                 areaHtml = AREAS.ITI;
