@@ -5,8 +5,8 @@
 // @description  Menu para ajustar a impressão do histórico escolar.
 // @author       Elder Martins
 // @match        http://sigeduca.seduc.mt.gov.br/ged/hwgedteladocumento.aspx?0,36
-// @updateURL    https://raw.githubusercontent.com/donidozh/Ferramentas-SIGEDUCA/main/InstaladorScripts.user.js
-// @downloadURL  https://raw.githubusercontent.com/donidozh/Ferramentas-SIGEDUCA/main/InstaladorScripts.user.js
+// @updateURL    https://github.com/donidozh/AjustarHistorico/raw/refs/heads/main/AjustarHistorico.user.js
+// @downloadURL  https://github.com/donidozh/AjustarHistorico/raw/refs/heads/main/AjustarHistorico.user.js
 // @grant        GM_addStyle
 // ==/UserScript==
 
