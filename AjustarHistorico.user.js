@@ -1,19 +1,17 @@
 // ==UserScript==
-// @name         Ajustar Impressão Histórico - SIGEDUCA
+// @name         Ajustar Impressão - SIGEDUCA
 // @namespace    http://tampermonkey.net/
-// @version      2.1
+// @version      2.2
 // @description  Menu para ajustar a impressão do histórico escolar.
 // @author       Elder Martins
 // @match        http://sigeduca.seduc.mt.gov.br/ged/hwgedteladocumento.aspx?0,36
-// @updateURL    https://github.com/donidozh/AjustarHistorico/raw/refs/heads/main/AjustarHistorico.user.js
-// @downloadURL  https://github.com/donidozh/AjustarHistorico/raw/refs/heads/main/AjustarHistorico.user.js
 // @grant        GM_addStyle
 // ==/UserScript==
 
 (function() {
     'use strict';
 
-    // --- CONFIGURAÇÕES E CONSTANTES (Otimizador) ---
+    // --- CONFIGURAÇÕES E CONSTANTES ---
     const AREAS = {
         MAT: "MATEMÁTICA E<br>SUAS TECNOLOGIAS",
         HUM: "CIÊNCIAS HUMANAS E<br>SOCIAIS APLICADAS",
@@ -25,7 +23,9 @@
         AP_ESTUDOS: "APROFUNDAMENTO<br>DE ESTUDOS",
         T_HUM_CHSA: "TRILHA DE APROFUNDAMENTO DE<br>CIÊNCIAS HUMANAS E<br>SOCIAIS APLICADAS (CHSA)",
         T_NAT_CNT: "TRILHA DE APROFUNDAMENTO DE<br>CIÊNCIAS DA NATUREZA E<br>SUAS TECNOLOGIAS (CNT)",
-        T_LIN_LGG: "TRILHA DE APROFUNDAMENTO DE<br>LINGUAGENS E<br>SUAS TECNOLOGIAS (LGG)"
+        T_LIN_LGG: "TRILHA DE APROFUNDAMENTO DE<br>LINGUAGENS E<br>SUAS TECNOLOGIAS (LGG)",
+        // Nova área EPT adicionada conforme solicitado
+        T_EPT_INFO: "TRILHA DE APROFUNDAMENTO EPT<br>MANUTENÇÃO E SUPORTE<br>EM INFORMÁTICA"
     };
 
     // --- ESTILOS DO MENU ---
@@ -35,7 +35,7 @@
             top: 15px;
             right: 15px;
             z-index: 99999;
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', Arial, sans-serif;
         }
         .btn-principal {
             background: #007bff;
@@ -46,28 +46,29 @@
             cursor: pointer;
             font-weight: bold;
             box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-            min-width: 170px;
+            min-width: 175px;
             text-align: center;
+            transition: background 0.2s;
         }
+        .btn-principal:hover { background: #0056b3; }
         .btn-principal:active { transform: scale(0.98); }
 
         .dropdown-content {
-            display: none; /* Escondido por padrão */
+            display: none;
             position: absolute;
             right: 0;
             background-color: #ffffff;
-            min-width: 210px;
+            min-width: 220px;
             box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
             border-radius: 8px;
             margin-top: 8px;
             overflow: hidden;
             border: 1px solid #ddd;
         }
-
-        /* Classe para mostrar o menu via JS */
+        
         .dropdown-content.show {
             display: block;
-            animation: fadeIn 0.2s;
+            animation: fadeIn 0.2s ease-out;
         }
 
         .dropdown-content button {
@@ -84,7 +85,7 @@
             transition: background 0.2s;
         }
         .dropdown-content button:last-child { border-bottom: none; }
-        .dropdown-content button:hover { background-color: #f8f9fa; color: #007bff; }
+        .dropdown-content button:hover { background-color: #f8f9fa; color: #007bff; padding-left: 20px; }
 
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(-10px); }
@@ -116,9 +117,15 @@
 
             let areaHtml = "";
 
-            if (texto.startsWith("APROFUNDAMENTO –") || texto.startsWith("APROFUNDAMENTO -") || texto === "LEITURA E PRODUÇÃO DE TEXTO") {
+            // Regra EPT Informatica
+            if (texto === "LÓGICA DE PROGRAMAÇÃO") {
+                areaHtml = AREAS.T_EPT_INFO;
+            }
+            // Regras Aprofundamento
+            else if (texto.startsWith("APROFUNDAMENTO –") || texto.startsWith("APROFUNDAMENTO -") || texto === "LEITURA E PRODUÇÃO DE TEXTO") {
                 areaHtml = AREAS.AP_ESTUDOS;
             }
+            // Trilhas IF/TA
             else if (["SOCIOLOGIA IF/TA", "HISTÓRIA IF/TA", "GEOGRAFIA IF/TA", "FILOSOFIA IF/TA"].includes(texto)) {
                 areaHtml = AREAS.T_HUM_CHSA;
             }
@@ -131,6 +138,7 @@
             else if (texto === "PROJETO DE VIDA IF/TA") {
                 areaHtml = AREAS.ITI;
             }
+            // Base Comum e Outros
             else if (texto === "MATEMÁTICA") areaHtml = AREAS.MAT;
             else if (["HISTÓRIA", "GEOGRAFIA", "SOCIOLOGIA", "FILOSOFIA"].includes(texto)) areaHtml = AREAS.HUM;
             else if (["ARTE", "EDUCAÇÃO FÍSICA", "LINGUA PORTUGUESA", "L.ESTRANG (INGLÊS)", "LÍNGUA INGLESA"].includes(texto)) areaHtml = AREAS.LIN;
@@ -149,7 +157,7 @@
                 }
             }
         });
-        alert(`✓ Histórico reduzido: ${contador} áreas processadas.`);
+        alert(`✓ Histórico atualizado: ${contador} áreas formatadas.`);
     }
 
     // --- FUNÇÃO: REMOVER SEM VALOR E AJUSTAR LAYOUT ---
@@ -167,7 +175,7 @@
             if (scr.innerText.includes("window.print")) scr.remove();
         });
 
-        alert("✅ Marca d'água removida e layout ajustado!");
+        alert("✅ Marca d'água removida!");
         const btnRemover = document.getElementById('btn-remover-sem-valor');
         if(btnRemover) btnRemover.style.color = "#28a745";
     }
@@ -189,7 +197,7 @@
 
         // Botão 1: Reduzir Histórico
         const btnReduzir = document.createElement('button');
-        btnReduzir.innerText = '📊 Reduzir Histórico';
+        btnReduzir.innerHTML = '📊 Reduzir Histórico';
         btnReduzir.onclick = (e) => { e.stopPropagation(); reduzirHistorico(); dropdown.classList.remove('show'); };
         dropdown.appendChild(btnReduzir);
 
@@ -198,22 +206,20 @@
         if (temMarcaAgua) {
             const btnRemover = document.createElement('button');
             btnRemover.id = 'btn-remover-sem-valor';
-            btnRemover.innerText = '📄 Remover Sem Valor';
+            btnRemover.innerHTML = '📄 Remover Sem Valor';
             btnRemover.onclick = (e) => { e.stopPropagation(); ajustarLayout(); dropdown.classList.remove('show'); };
             dropdown.appendChild(btnRemover);
         }
 
-        // Lógica de clique para abrir/fechar
+        // Lógica de clique abrir/fechar
         btnPrincipal.onclick = (e) => {
-            e.stopPropagation(); // Impede que o clique feche o menu imediatamente
+            e.stopPropagation();
             dropdown.classList.toggle('show');
         };
 
-        // Fechar ao clicar fora do menu
+        // Fechar ao clicar fora
         window.addEventListener('click', () => {
-            if (dropdown.classList.contains('show')) {
-                dropdown.classList.remove('show');
-            }
+            if (dropdown.classList.contains('show')) dropdown.classList.remove('show');
         });
 
         container.appendChild(btnPrincipal);
