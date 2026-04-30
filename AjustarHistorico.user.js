@@ -1,10 +1,12 @@
 // ==UserScript==
 // @name         Ajustar Impressão - SIGEDUCA
 // @namespace    http://tampermonkey.net/
-// @version      2.2
-// @description  Menu para ajustar a impressão do histórico escolar.
+// @version      2.3
+// @description  Menu para ajustar a impressão e editar notas do histórico escolar.
 // @author       Elder Martins
 // @match        http://sigeduca.seduc.mt.gov.br/ged/hwgedteladocumento.aspx?0,36
+// @updateURL    https://github.com/donidozh/AjustarHistorico/raw/refs/heads/main/AjustarHistorico.user.js
+// @downloadURL  https://github.com/donidozh/AjustarHistorico/raw/refs/heads/main/AjustarHistorico.user.js
 // @grant        GM_addStyle
 // ==/UserScript==
 
@@ -24,11 +26,10 @@
         T_HUM_CHSA: "TRILHA DE APROFUNDAMENTO DE<br>CIÊNCIAS HUMANAS E<br>SOCIAIS APLICADAS (CHSA)",
         T_NAT_CNT: "TRILHA DE APROFUNDAMENTO DE<br>CIÊNCIAS DA NATUREZA E<br>SUAS TECNOLOGIAS (CNT)",
         T_LIN_LGG: "TRILHA DE APROFUNDAMENTO DE<br>LINGUAGENS E<br>SUAS TECNOLOGIAS (LGG)",
-        // Nova área EPT adicionada conforme solicitado
         T_EPT_INFO: "TRILHA DE APROFUNDAMENTO EPT<br>MANUTENÇÃO E SUPORTE<br>EM INFORMÁTICA"
     };
 
-    // --- ESTILOS DO MENU ---
+    // --- ESTILOS DO MENU E DOS INPUTS ---
     GM_addStyle(`
         .menu-elder-container {
             position: fixed;
@@ -65,7 +66,7 @@
             overflow: hidden;
             border: 1px solid #ddd;
         }
-        
+
         .dropdown-content.show {
             display: block;
             animation: fadeIn 0.2s ease-out;
@@ -87,6 +88,19 @@
         .dropdown-content button:last-child { border-bottom: none; }
         .dropdown-content button:hover { background-color: #f8f9fa; color: #007bff; padding-left: 20px; }
 
+        .ged-edit-input {
+            width: 100%;
+            min-width: 35px;
+            box-sizing: border-box;
+            text-align: center;
+            font-size: 10px;
+            font-family: Arial;
+            border: 1px dashed #007bff;
+            background-color: #e9ecef;
+            padding: 2px;
+            color: #000;
+        }
+
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(-10px); }
             to { opacity: 1; transform: translateY(0); }
@@ -95,6 +109,7 @@
         @media print {
             .menu-elder-container { display: none !important; }
             img { max-width: 100% !important; height: auto !important; }
+            .ged-edit-input { border: none !important; background: transparent !important; }
         }
     `);
 
@@ -104,6 +119,58 @@
         span.style.cssText = "font-size: 10px; font-weight: bold; display: inline-block; line-height: 1.1; text-align: center; width: 100%; opacity: 0.65;";
         span.innerHTML = textoHtml;
         return span;
+    }
+
+    function obterCelulasEditaveis() {
+        const cells = [];
+        const allTds = document.querySelectorAll('#content table td');
+        allTds.forEach(td => {
+            if (td.querySelector('strong') || td.querySelector('img') || td.querySelector('table')) return;
+            const text = td.innerText.trim();
+            if (text === '') return;
+            cells.push(td);
+        });
+        return cells;
+    }
+
+    // --- FUNÇÃO: EDITAR HISTÓRICO ---
+    function editarNotas() {
+        const cells = obterCelulasEditaveis();
+        cells.forEach(td => {
+            if (td.querySelector('input')) return;
+            const currentText = td.innerText.trim();
+
+            if (!td.hasAttribute('data-original-html')) {
+                td.setAttribute('data-original-html', td.innerHTML);
+            }
+            td.innerHTML = `<input type="text" class="ged-edit-input" value="${currentText}">`;
+        });
+    }
+
+    // --- FUNÇÃO: SALVAR ALTERAÇÕES ---
+    function salvarNotas() {
+        const inputs = document.querySelectorAll('.ged-edit-input');
+        if(inputs.length === 0) return;
+
+        inputs.forEach(input => {
+            const val = input.value;
+            const td = input.parentElement;
+            td.innerHTML = `<span style="font-size: 10px"><span style="font-family: Arial">${val}</span></span>`;
+        });
+        alert("✓ Notas atualizadas e formatadas para impressão!");
+    }
+
+    // --- FUNÇÃO: DESFAZER ALTERAÇÕES ---
+    function desfazerNotas() {
+        const allTds = document.querySelectorAll('#content table td');
+        let contador = 0;
+        allTds.forEach(td => {
+            if (td.hasAttribute('data-original-html')) {
+                td.innerHTML = td.getAttribute('data-original-html');
+                contador++;
+            }
+        });
+        if(contador > 0) alert("✓ Alterações desfeitas. Valores originais restaurados.");
     }
 
     // --- FUNÇÃO: REDUZIR HISTÓRICO ---
@@ -117,15 +184,12 @@
 
             let areaHtml = "";
 
-            // Regra EPT Informatica
             if (texto === "LÓGICA DE PROGRAMAÇÃO") {
                 areaHtml = AREAS.T_EPT_INFO;
             }
-            // Regras Aprofundamento
             else if (texto.startsWith("APROFUNDAMENTO –") || texto.startsWith("APROFUNDAMENTO -") || texto === "LEITURA E PRODUÇÃO DE TEXTO") {
                 areaHtml = AREAS.AP_ESTUDOS;
             }
-            // Trilhas IF/TA
             else if (["SOCIOLOGIA IF/TA", "HISTÓRIA IF/TA", "GEOGRAFIA IF/TA", "FILOSOFIA IF/TA"].includes(texto)) {
                 areaHtml = AREAS.T_HUM_CHSA;
             }
@@ -138,7 +202,6 @@
             else if (texto === "PROJETO DE VIDA IF/TA") {
                 areaHtml = AREAS.ITI;
             }
-            // Base Comum e Outros
             else if (texto === "MATEMÁTICA") areaHtml = AREAS.MAT;
             else if (["HISTÓRIA", "GEOGRAFIA", "SOCIOLOGIA", "FILOSOFIA"].includes(texto)) areaHtml = AREAS.HUM;
             else if (["ARTE", "EDUCAÇÃO FÍSICA", "LINGUA PORTUGUESA", "L.ESTRANG (INGLÊS)", "LÍNGUA INGLESA"].includes(texto)) areaHtml = AREAS.LIN;
@@ -195,13 +258,31 @@
         dropdown.className = 'dropdown-content';
         dropdown.id = 'elder-dropdown';
 
-        // Botão 1: Reduzir Histórico
+        // 1: Reduzir Histórico
         const btnReduzir = document.createElement('button');
         btnReduzir.innerHTML = '📊 Reduzir Histórico';
         btnReduzir.onclick = (e) => { e.stopPropagation(); reduzirHistorico(); dropdown.classList.remove('show'); };
         dropdown.appendChild(btnReduzir);
 
-        // Botão 2: Remover Sem Valor (Condicional)
+        // 2: Editar Notas
+        const btnEditar = document.createElement('button');
+        btnEditar.innerHTML = '✏️ Editar Notas';
+        btnEditar.onclick = (e) => { e.stopPropagation(); editarNotas(); dropdown.classList.remove('show'); };
+        dropdown.appendChild(btnEditar);
+
+        // 3: Salvar Edições
+        const btnSalvar = document.createElement('button');
+        btnSalvar.innerHTML = '💾 Salvar Edições';
+        btnSalvar.onclick = (e) => { e.stopPropagation(); salvarNotas(); dropdown.classList.remove('show'); };
+        dropdown.appendChild(btnSalvar);
+
+        // 4: Desfazer Edição
+        const btnDesfazer = document.createElement('button');
+        btnDesfazer.innerHTML = '↩️ Desfazer Edição';
+        btnDesfazer.onclick = (e) => { e.stopPropagation(); desfazerNotas(); dropdown.classList.remove('show'); };
+        dropdown.appendChild(btnDesfazer);
+
+        // 5: Remover Sem Valor (Condicional)
         const temMarcaAgua = document.querySelector('img[src="imagem/documentosemvalor.jpg"]');
         if (temMarcaAgua) {
             const btnRemover = document.createElement('button');
